@@ -1,135 +1,160 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LinguaQuick</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinguaQuick</title>
 
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="logo.svg">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="logo.svg">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: #fff;
-      color: #000;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
+<script src="https://cdn.tailwindcss.com"></script>
 
-    header {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    #banner {
-      text-align: center;
-      font-size: 28px;
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-      min-height: 60px;
-    }
-
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      padding: 10px;
-    }
-
-    button {
-      font-size: 20px;
-      padding: 15px;
-      border: none;
-      border-radius: 10px;
-      background: #f2f2f2;
-    }
-
-    .double {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 5px;
-    }
-
-    .split {
-      display: none;
-      flex: 1;
-    }
-
-    .half {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 28px;
-      padding: 20px;
-    }
-
-    .top {
-      transform: rotate(180deg);
-      border-bottom: 1px solid #ddd;
-    }
-
-    .settings {
-      display: none;
-      padding: 10px;
-      border-top: 1px solid #ddd;
-    }
-
-    select, input {
-      font-size: 16px;
-      margin: 5px 0;
-      width: 100%;
-    }
-  </style>
+<style>
+html, body { margin:0; padding:0; }
+.split-top { transform: rotate(180deg); }
+.btn { @apply bg-gray-100 rounded-xl p-3 text-center text-lg font-semibold shadow; }
+</style>
 </head>
-<body>
 
-<header>
-  <strong>LinguaQuick</strong>
-  <div>
-    <button onclick="toggleSplit()">↕</button>
-    <button onclick="toggleSettings()">⚙</button>
-  </div>
-</header>
+<body class="bg-white text-black">
 
-<div id="banner"></div>
+<!-- HEADER -->
+<div id="banner" class="fixed top-0 left-0 w-full bg-black text-white text-xl p-3 text-center z-50 hidden"></div>
 
-<main id="main">
-  <div class="grid" id="grid"></div>
+<!-- LANGUAGE SELECT -->
+<div class="p-2 flex justify-center gap-2 flex-wrap">
+<select id="langFrom" class="border p-2">
+<option value="fr">🇫🇷</option>
+<option value="en">🇬🇧</option>
+<option value="de">🇩🇪</option>
+<option value="it">🇮🇹</option>
+<option value="es">🇪🇸</option>
+<option value="fa">🇮🇷</option>
+<option value="pl">🇵🇱</option>
+<option value="ar">🇸🇦</option>
+</select>
 
-  <div class="split" id="split">
-    <div class="half top" id="topText"></div>
-    <div class="half" id="bottomText"></div>
-  </div>
-</main>
+<select id="langTo" class="border p-2">
+<option value="en">🇬🇧</option>
+<option value="fr">🇫🇷</option>
+<option value="de">🇩🇪</option>
+<option value="it">🇮🇹</option>
+<option value="es">🇪🇸</option>
+<option value="fa">🇮🇷</option>
+<option value="pl">🇵🇱</option>
+<option value="ar">🇸🇦</option>
+</select>
 
-<div class="settings" id="settings">
-  <label>Langue Natale</label>
-  <select id="nativeLang"></select>
-
-  <label>Langue Cible</label>
-  <select id="targetLang"></select>
-
-  <label>
-    <input type="checkbox" id="phonetic"> Phonétique (AR/FA)
-  </label>
-
-  <label>Taille texte</label>
-  <input type="range" id="fontSize" min="16" max="40" value="28">
+<button onclick="toggleMode()" class="border px-3">Split</button>
 </div>
 
-<script src="app.js"></script>
+<!-- SUGGESTIONS -->
+<div id="suggestions" class="h-1/3 p-2 grid grid-cols-3 gap-2"></div>
+
+<!-- MAIN -->
+<div id="main" class="p-2 grid grid-cols-2 gap-2 mt-2"></div>
+
+<!-- SPLIT -->
+<div id="split" class="hidden h-screen flex flex-col">
+<div id="top" class="flex-1 split-top flex flex-col items-center justify-center"></div>
+<div id="bottom" class="flex-1 flex flex-col items-center justify-center"></div>
+</div>
+
+<script>
+// DATA
+const data = {
+bonjour:{fr:"bonjour",en:"hello",de:"hallo",it:"ciao",es:"hola",fa:"سلام",pl:"cześć",ar:"مرحبا"},
+merci:{fr:"merci",en:"thank you",de:"danke",it:"grazie",es:"gracias",fa:"ممنون",pl:"dziękuję",ar:"شكرا"},
+oui:{fr:"oui",en:"yes",de:"ja",it:"sì",es:"sí",fa:"بله",pl:"tak",ar:"نعم"},
+non:{fr:"non",en:"no",de:"nein",it:"no",es:"no",fa:"نه",pl:"nie",ar:"لا"},
+toilettes:{fr:"où sont les toilettes ?",en:"where are the toilets?",de:"wo sind die toiletten?",it:"dove sono i bagni?",es:"donde estan los baños?",fa:"دستشویی کجاست؟",pl:"gdzie są toalety?",ar:"أين الحمام؟"},
+manger:{fr:"je veux manger",en:"i want to eat",de:"ich will essen",it:"voglio mangiare",es:"quiero comer",fa:"می‌خواهم غذا بخورم",pl:"chcę jeść",ar:"أريد أن آكل"},
+help:{fr:"tu peux m'aider ?",en:"can you help me?",de:"kannst du mir helfen?",it:"puoi aiutarmi?",es:"puedes ayudarme?",fa:"می‌توانی کمک کنی؟",pl:"możesz mi pomóc?",ar:"هل يمكنك مساعدتي؟"}
+};
+
+const suggestionsMap = {
+bonjour:["merci","help","manger"],
+merci:["bonjour","oui","help"],
+oui:["merci","manger","help"]
+};
+
+let splitMode=false;
+
+// SPEECH
+function speak(text, lang){
+const utter = new SpeechSynthesisUtterance(text);
+utter.lang = lang;
+speechSynthesis.speak(utter);
+}
+
+// DISPLAY
+function showBanner(text){
+const b = document.getElementById("banner");
+b.innerText=text;
+b.classList.remove("hidden");
+setTimeout(()=>b.classList.add("hidden"),3000);
+}
+
+// CLICK
+function handleClick(key){
+const from = document.getElementById("langFrom").value;
+const to = document.getElementById("langTo").value;
+
+const translated = data[key][to];
+
+showBanner(translated);
+speak(translated,to);
+
+renderSuggestions(key);
+
+if(splitMode){
+document.getElementById("top").innerText = translated;
+document.getElementById("bottom").innerText = data[key][from];
+}
+}
+
+// SUGGESTIONS
+function renderSuggestions(key){
+const s = document.getElementById("suggestions");
+s.innerHTML="";
+(suggestionsMap[key]||[]).forEach(k=>{
+const div=document.createElement("div");
+div.className="btn";
+div.innerText=data[k][document.getElementById("langFrom").value];
+div.onclick=()=>handleClick(k);
+s.appendChild(div);
+});
+}
+
+// MAIN GRID
+function renderMain(){
+const m=document.getElementById("main");
+m.innerHTML="";
+Object.keys(data).forEach(k=>{
+const div=document.createElement("div");
+div.className="btn";
+div.innerText=data[k][document.getElementById("langFrom").value];
+div.onclick=()=>handleClick(k);
+m.appendChild(div);
+});
+}
+
+// MODE
+function toggleMode(){
+splitMode=!splitMode;
+document.getElementById("main").classList.toggle("hidden");
+document.getElementById("split").classList.toggle("hidden");
+}
+
+// INIT
+renderMain();
+
+// SW
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("sw.js");
+}
+</script>
+
 </body>
 </html>
