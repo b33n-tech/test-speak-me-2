@@ -1,15 +1,15 @@
 const CACHE_NAME = "linguaquick-v1";
-const ASSETS = [
-  "/",
-  "/index.html",
-  "/app.js",
-  "/manifest.json",
-  "/logo.svg"
+
+const urlsToCache = [
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./logo.svg"
 ];
 
 self.addEventListener("install", e => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
 });
 
